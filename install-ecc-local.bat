@@ -36,13 +36,44 @@ echo ========================================================
 echo TARGET PROJECT: %TARGET_DIR%
 echo.
 
-:: Ask user for project stack
+:: Auto-detect language
+set "DETECTED_LANG="
+if exist "%TARGET_DIR%\package.json" set "DETECTED_LANG=typescript"
+if exist "%TARGET_DIR%\tsconfig.json" set "DETECTED_LANG=typescript"
+if exist "%TARGET_DIR%\go.mod" set "DETECTED_LANG=golang"
+if exist "%TARGET_DIR%\requirements.txt" set "DETECTED_LANG=python"
+if exist "%TARGET_DIR%\pyproject.toml" set "DETECTED_LANG=python"
+if exist "%TARGET_DIR%\composer.json" set "DETECTED_LANG=php"
+if exist "%TARGET_DIR%\Package.swift" set "DETECTED_LANG=swift"
+if exist "%TARGET_DIR%\Cargo.toml" set "DETECTED_LANG=rust"
+if exist "%TARGET_DIR%\pom.xml" set "DETECTED_LANG=java"
+if exist "%TARGET_DIR%\build.gradle" set "DETECTED_LANG=java"
+if exist "%TARGET_DIR%\build.gradle.kts" set "DETECTED_LANG=kotlin"
+if exist "%TARGET_DIR%\*.csproj" set "DETECTED_LANG=csharp"
+if exist "%TARGET_DIR%\*.sln" set "DETECTED_LANG=csharp"
+if exist "%TARGET_DIR%\CMakeLists.txt" set "DETECTED_LANG=cpp"
+
 echo Available language rules:
-echo typescript, python, golang, web, swift, php, ...
+echo typescript, python, golang, rust, cpp, java, csharp, web, swift, php, ...
 echo.
+
+if not "!DETECTED_LANG!"=="" (
+    echo [AUTO-DETECT] Found project files suggesting language: !DETECTED_LANG!
+)
+
 echo Enter the programming language of your project.
-echo (Type 'all' to copy ALL rules, or press Enter for 'common' rules only):
-set /p LANG="Language (all, typescript, python...): "
+echo (Type 'all' to copy ALL rules, 'auto' or press Enter to auto-detect/common):
+set /p LANG="Language (all, auto, typescript, python...): "
+
+if "!LANG!"=="" set "LANG=auto"
+
+if /I "!LANG!"=="auto" (
+    if not "!DETECTED_LANG!"=="" (
+        set "LANG=!DETECTED_LANG!"
+    ) else (
+        set "LANG=common-only"
+    )
+)
 
 echo.
 echo [1/4] Creating .claude directory structure...
@@ -59,8 +90,9 @@ if /I "!LANG!"=="all" (
 ) else (
     if exist "%SOURCE_DIR%\rules\common" (
         xcopy "%SOURCE_DIR%\rules\common" "%CLAUDE_DIR%\rules\common\" /E /I /Y /Q >nul
+        echo   - Copied 'common' rules.
     )
-    if not "!LANG!"=="" (
+    if not "!LANG!"=="common-only" (
         if exist "%SOURCE_DIR%\rules\!LANG!" (
             xcopy "%SOURCE_DIR%\rules\!LANG!" "%CLAUDE_DIR%\rules\!LANG!\" /E /I /Y /Q >nul
             echo   - Copied rules for !LANG!.
