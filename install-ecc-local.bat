@@ -138,17 +138,17 @@ echo [2/4] Copying Rules...
 if /I "!LANG!"=="all" (
     echo   - Copying ALL language rules...
     xcopy "%SOURCE_DIR%\rules" "%CLAUDE_DIR%\rules\" /E /I /Y /Q >nul
-    if errorlevel 1 set "COPY_FAILED=1"
+    if errorlevel 2 set "COPY_FAILED=1"
 ) else (
     if exist "%SOURCE_DIR%\rules\common" (
         xcopy "%SOURCE_DIR%\rules\common" "%CLAUDE_DIR%\rules\common\" /E /I /Y /Q >nul
-        if errorlevel 1 set "COPY_FAILED=1"
+        if errorlevel 2 set "COPY_FAILED=1"
         echo   - Copied 'common' rules.
     )
-    if not "!LANG!"=="common-only" (
+    if /I not "!LANG!"=="common-only" (
         if exist "%SOURCE_DIR%\rules\!LANG!" (
             xcopy "%SOURCE_DIR%\rules\!LANG!" "%CLAUDE_DIR%\rules\!LANG!\" /E /I /Y /Q >nul
-            if errorlevel 1 set "COPY_FAILED=1"
+            if errorlevel 2 set "COPY_FAILED=1"
             echo   - Copied rules for !LANG!.
         ) else (
             echo   - [WARNING] rules\!LANG! not found in ECC, skipping...
@@ -159,11 +159,11 @@ if /I "!LANG!"=="all" (
 echo [3/4] Copying Skills...
 if exist "%SOURCE_DIR%\.agents\skills" (
     xcopy "%SOURCE_DIR%\.agents\skills" "%CLAUDE_DIR%\skills\" /E /I /Y /Q >nul
-    if errorlevel 1 set "COPY_FAILED=1"
+    if errorlevel 2 set "COPY_FAILED=1"
 )
 if exist "%SOURCE_DIR%\skills\search-first" (
     xcopy "%SOURCE_DIR%\skills\search-first" "%CLAUDE_DIR%\skills\search-first\" /E /I /Y /Q >nul
-    if errorlevel 1 set "COPY_FAILED=1"
+    if errorlevel 2 set "COPY_FAILED=1"
 )
 
 echo [4/4] Copying Agents ^& Commands...
