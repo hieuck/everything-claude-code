@@ -41,6 +41,11 @@ if exist "%SOURCE_DIR%\.git\" (
     echo [0/4] Checking for latest ECC updates from GitHub...
     pushd "%SOURCE_DIR%"
     git pull
+    if errorlevel 1 (
+        color 0E
+        echo [WARNING] git pull failed. Continuing with existing files...
+        color 0A
+    )
     popd
     echo.
 )
@@ -75,6 +80,11 @@ echo (Type 'all' to copy ALL rules, 'auto' or press Enter to auto-detect/common)
 set /p LANG="Language (all, auto, typescript, python...): "
 
 if "!LANG!"=="" set "LANG=auto"
+
+:: Sanitize input to prevent path traversal
+set "LANG=!LANG:.=!"
+set "LANG=!LANG:\=!"
+set "LANG=!LANG:/=!"
 
 if /I "!LANG!"=="auto" (
     if not "!DETECTED_LANG!"=="" (
