@@ -86,6 +86,16 @@ set "LANG=!LANG:.=!"
 set "LANG=!LANG:\=!"
 set "LANG=!LANG:/=!"
 
+if "!LANG!"=="" set "LANG=auto"
+
+:: Strict allowlist validation for language token
+echo(!LANG!| findstr /R /I /C:"^[a-z0-9_-][a-z0-9_-]*$" >nul
+if errorlevel 1 (
+    color 0C
+    echo [ERROR] Invalid language value: "!LANG!"
+    pause
+    exit /b 1
+)
 if /I "!LANG!"=="auto" (
     if not "!DETECTED_LANG!"=="" (
         set "LANG=!DETECTED_LANG!"
@@ -102,18 +112,22 @@ if not exist "%CLAUDE_DIR%\skills" mkdir "%CLAUDE_DIR%\skills"
 if not exist "%CLAUDE_DIR%\agents" mkdir "%CLAUDE_DIR%\agents"
 if not exist "%CLAUDE_DIR%\commands" mkdir "%CLAUDE_DIR%\commands"
 
+set "COPY_FAILED=0"
 echo [2/4] Copying Rules...
 if /I "!LANG!"=="all" (
     echo   - Copying ALL language rules...
     xcopy "%SOURCE_DIR%\rules" "%CLAUDE_DIR%\rules\" /E /I /Y /Q >nul
+    if errorlevel 1 set "COPY_FAILED=1"
 ) else (
     if exist "%SOURCE_DIR%\rules\common" (
         xcopy "%SOURCE_DIR%\rules\common" "%CLAUDE_DIR%\rules\common\" /E /I /Y /Q >nul
+        if errorlevel 1 set "COPY_FAILED=1"
         echo   - Copied 'common' rules.
     )
     if not "!LANG!"=="common-only" (
         if exist "%SOURCE_DIR%\rules\!LANG!" (
             xcopy "%SOURCE_DIR%\rules\!LANG!" "%CLAUDE_DIR%\rules\!LANG!\" /E /I /Y /Q >nul
+            if errorlevel 1 set "COPY_FAILED=1"
             echo   - Copied rules for !LANG!.
         ) else (
             echo   - [WARNING] rules\!LANG! not found in ECC, skipping...
@@ -124,20 +138,34 @@ if /I "!LANG!"=="all" (
 echo [3/4] Copying Skills...
 if exist "%SOURCE_DIR%\.agents\skills" (
     xcopy "%SOURCE_DIR%\.agents\skills" "%CLAUDE_DIR%\skills\" /E /I /Y /Q >nul
+    if errorlevel 1 set "COPY_FAILED=1"
 )
 if exist "%SOURCE_DIR%\skills\search-first" (
     xcopy "%SOURCE_DIR%\skills\search-first" "%CLAUDE_DIR%\skills\search-first\" /E /I /Y /Q >nul
+    if errorlevel 1 set "COPY_FAILED=1"
 )
 
 echo [4/4] Copying Agents ^& Commands...
 if exist "%SOURCE_DIR%\agents" (
     xcopy "%SOURCE_DIR%\agents\*.md" "%CLAUDE_DIR%\agents\" /Y /Q >nul
+    if errorlevel 1 set "COPY_FAILED=1"
 )
 if exist "%SOURCE_DIR%\commands" (
     xcopy "%SOURCE_DIR%\commands\*.md" "%CLAUDE_DIR%\commands\" /Y /Q >nul
+    if errorlevel 1 set "COPY_FAILED=1"
 )
 
 echo.
+if "!COPY_FAILED!"=="1" (
+    color 0C
+    echo ========================================================
+    echo INSTALLATION FAILED
+    echo One or more copy steps failed.
+    echo ========================================================
+    pause
+    exit /b 1
+)
+
 echo ========================================================
 echo DONE! INSTALLATION SUCCESSFUL.
 echo ECC configuration has been copied to:
